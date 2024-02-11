@@ -6,7 +6,7 @@ const plm = require("passport-local-mongoose");
     email:String,
     contact:String,
     fullname:String,
-    playlists:[{
+    playlist:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'playlist',
     }],

@@ -4,8 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <link rel="stylesheet" href="./stylesheets/index.css">
+  <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
 </head>
 <body>
-  <h1>home</h1>
+  <div id="main">
+    <div class="left">
+      <button>
+        <i class="ri-home-5-fill"></i>
+        <h3>Home</h3>
+      </button>
+     <a href="/search">
+      <button>
+        <i class="ri-search-line"></i>
+        <h3>Search</h3>
+      </button>
+     </a>
+    </div>
+    <div class="right">
+      <div class="music">
+        <% currentUser.playlist[0].songs.forEach(function(song){ %>
+          <div class="card" onclick="songCardClicked('<%= song.filename %>')">
+            <img src="/poster/<%= song.poster %>" alt="">
+            <h5><%= song.title %></h5>
+            <p><%= song.artist %></p>
+            <p><%= song.album %></p>
+            <div class="playButton">
+              <i class="ri-play-circle-fill"></i>
+            </div>
+          </div>
+        <%  }) %>
+      </div>
+      <audio src="/stream/4b474b6f-0ae3-4c26-9a90-b2a0377b940d" controls></audio>
+    </div>
+  </div>
+
+  <script>
+    function songCardClicked(filename) {
+      document.querySelector('audio').setAttribute('src',`/stream/${filename}`)
+      document.querySelector('audio').play()
+    }
+  </script>
+
 </body>
 </html>

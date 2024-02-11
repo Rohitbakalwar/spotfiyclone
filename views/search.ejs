@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./stylesheets/index.css">
+    <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
+</head>
+<body>
+    <input type="text" placeholder="search music" style="width: 30%; height: 30px; font-size: 20px;">
+    <button style="width: 100px; height: 30px;" onclick="searchSong()">search</button>
+
+    <div class="right" style="width: 100%;">
+        <div class="music">
+
+        </div>
+        <audio src="/stream/4b474b6f-0ae3-4c26-9a90-b2a0377b940d" controls></audio>
+    </div>
+
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js" integrity="sha512-NQfB/bDaB8kaSXF8E77JjhHG5PM6XVRxvHzkZiwl3ddWCEPBa23T76MuWSwAJdMGJnmQqM0VeY9kFszsrBEFrQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js" integrity="sha512-emSwuKiMyYedRwflbZB2ghzX8Cw8fmNVgZ6yQNNXXagFzFOaQmbvQ1vmDkddHjm5AITcBIZfC7k4ShQSjgPAmQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script>
+       async function  searchSong(){
+      const result =  await axios.post('/search',{
+            search:document.querySelector('input').value
+        })
+        let clutter = ''
+        
+        result.data.song.forEach(function(songs){
+        clutter += `<div class="card" onclick="songCardClicked('${songs.filename}')">
+            <img src="/poster/${songs.poster}" alt="">
+            <h5>'${songs.title}'</h5>
+            <p>'${songs.artist}'</p>
+            <p>'${songs.album}'</p>
+            <div class="playButton">
+              <i class="ri-play-circle-fill"></i>
+            </div>
+          </div>`
+        })
+
+        document.querySelector(".music").innerHTML = clutter
+
+       }
+
+       function songCardClicked(filename) {
+      document.querySelector('audio').setAttribute('src',`/stream/${filename}`)
+      document.querySelector('audio').play()
+    }
+    </script>
+</body>
+</html>

@@ -10,7 +10,6 @@ const multer = require("multer");
 const id3 = require("node-id3");
 const {Readable} = require('stream');
 const localStrategy = require('passport-local');
-const { time } = require('console');
 passport.use(new localStrategy(userModel.authenticate()));
 
 
@@ -32,8 +31,17 @@ conn.once("open",()=>{
   })
 })
 
-router.get("/",isLoggedIn,(req,res,next)=>{
-  res.render("index");
+router.get("/",isLoggedIn, async(req,res,next)=>{
+  const currentUser = await userModel.findOne({
+    _id:req.user._id
+  }).populate('playlist').populate({
+    path:'playlist',
+    populate:{
+      path:'songs',
+      model:'song'
+    }
+  })
+  res.render("index",{currentUser});
 })
 
 router.get('/register', function(req, res, next) {
@@ -48,6 +56,46 @@ router.get('/profile',isLoggedIn,(req,res)=>{
   res.render("profile")
 })
 
+router.get('/poster/:posterName',(req,res)=>{
+  gfsBucketPoster.openDownloadStreamByName(req.params.posterName).pipe(res)
+})
+
+router.get('/stream/:musicStream', async(req,res)=>{
+  const currentSong = await songModel.findOne({
+    filename:req.params.musicStream
+  })
+
+
+
+   const stream = gfsBucket.openDownloadStreamByName  (req.params.musicStream)
+
+   res.set('content-Type','audio/mpeg');
+   res.set('content-Length',currentSong.size + 1)
+   res.set('content-Range',`bytes 0-${currentSong.size - 1}/${currentSong.size}`)
+   res.status(206)
+
+   stream.pipe(res)
+
+})
+
+router.get('/search',(req,res,next)=>{
+  res.render('search')
+})
+
+router.post('/search', async (req, res, next) => {
+
+  // console.log(req.body)
+  const searchedMusic = await songModel.find({
+    title: { $regex: req.body.search }
+  })
+
+  res.json({
+    song: searchedMusic
+  })
+
+})
+
+
 /*authenticate routes*/
 
 router.post('/register',function(req,res){
@@ -58,8 +106,24 @@ router.post('/register',function(req,res){
   })
 userModel.register(newUser, req.body.password)
 .then((u)=>{
-  passport.authenticate('local')(req,res,function(){
-    res.redirect('/profile')
+  passport.authenticate('local')(req,res, async function(){
+    
+    const songs =  await songModel.find();
+    const defaultPlaylist = await playlistModel.create({
+      name: req.body.username,
+      owner:req.user._id,
+      songs:songs.map(song=>song._id)
+    })
+
+    const newUser = await userModel.findOne({
+      _id: req.user._id
+    })
+
+    newUser.playlist.push(defaultPlaylist._id);
+
+    await newUser.save();
+
+    res.redirect('/')
   })
 })
 .catch((err)=>{
@@ -68,7 +132,7 @@ userModel.register(newUser, req.body.password)
 })
 
 router.post('/login',passport.authenticate('local',{
-  successRedirect:"/profile",
+  successRedirect:"/",
   failureRedirect:"/login"
 }),(req,res)=>{})
 
